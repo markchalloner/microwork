@@ -1,11 +1,7 @@
-This folder can be used for temporary files that need to be written to.
+MicroWork is a tiny web framework providing:
 
-It needs write permissions:
+- Models and Views
+- Basic Routing
+- A templating engine inspired by Twig
 
-<code>
-chmod 0777 /<path_to>/tmp
-</code>
-
-or (setting sticky bit)
-
-chmod 1733 /<path_to>/tmp
+It was created for fun and to make web development that little bit easier
