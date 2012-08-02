@@ -1,0 +1,6 @@
+RewriteEngine On
+RewriteOptions inherit
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d [OR]
+RewriteCond %{REQUEST_FILENAME} /microwork/
+RewriteRule ^(.*)$ /microwork/web/index.php/$1 [L,PT]
