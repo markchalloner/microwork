@@ -11,5 +11,9 @@ spl_autoload_register(function($class) {
 session_start();
 
 // Create router and route
-$router = new Router();
-$router->route(isset($_SERVER['PATH_INFO']) ? $_SERVER['PATH_INFO'] : '');
+try {
+    $router = new Router();
+    $router->route(isset($_SERVER['PATH_INFO']) ? $_SERVER['PATH_INFO'] : '');
+} catch (Exception $e) {
+    echo 'Error: ' . $e->getMessage();
+}
