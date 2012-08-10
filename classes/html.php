@@ -6,19 +6,23 @@ class HTML {
     private $tags = array();
     private $uses = array();
     private $root = null;
+    private $contents = array();
 
     public function __construct() {
-
+        $this->logger = FirePHP::getInstance(true);
     }
 
     public function setTag($view, $name, $value, $parent = NULL) {
-        if (!isset($this->tags[$name]) || strlen(trim($value))) {
+
+          // Add the tag if it does not already exist or the value is non-empty
+          if (!isset($this->tags[$name]) || strlen(trim($value))) {
             if (isset($this->tags[$name])) {
                 $tag = $this->tags[$name];
             } else {
                 $tag = new Tag($name, $view);
                 $this->tags[$name] = $tag;
             }
+            // Assign the root to the first tag (html)
             if (!isset($this->root)) {
                 $this->root = $tag;
             }
@@ -26,9 +30,17 @@ class HTML {
                 $parent = $this->tags[$parent];
                 $parent->addChild($tag);
             }
+            // Delete any empty content if we are adding true content
+            if (strlen(trim($value)) && $tag->isEmpty()) {
+                $tag->deleteValues();
+            }
+            // If we are at the same level
             if ($view->getIndex() == $tag->getView()->getIndex()) {
+                // Just add this content
                 $tag->addValue($value);
+            // Otherwose
             } else if ($view->getIndex() < $tag->getView()->getIndex()) {
+                // Override with this level's content
                 $tag->deleteValues();
                 $tag->addValue($value);
                 $tag->setView($view);
@@ -36,7 +48,10 @@ class HTML {
         }
     }
 
-    public function build($tag = NULL, $k = 0) {
+    public function build($tag = NULL, $c = 0) {
+        if ($c >= 100) {
+            return;
+        }
         if (!isset($tag)) {
             $tag = $this->root;
         }
@@ -48,10 +63,16 @@ class HTML {
         $values = isset($tag_uses) && strlen(trim(implode('', $values_uses))) ? $values_uses : $tag->getValues();
         $children = $tag->getChildren();
         for ($i = 0, $l = count($values); $i < $l; $i++) {
-            echo $values[$i];
+            $this->contents[] = $values[$i];
             if (isset($children[$i])) {
-                $this->build($children[$i], $k+1);
+                $this->build($children[$i], $c+1);
             }
+        }
+    }
+
+    public function output() {
+        foreach ($this->contents as $content) {
+            echo $content;
         }
     }
 
