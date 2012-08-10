@@ -50,4 +50,15 @@ class Tag {
         return $this->children;
     }
 
+    public function isEmpty() {
+        $empty = TRUE;
+        foreach ($this->getValues() as $value) {
+            if (strlen(trim($value)) > 0) {
+                $empty = FALSE;
+                break;
+            }
+        }
+        return $empty;
+    }
+
 }
