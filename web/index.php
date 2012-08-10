@@ -1,6 +1,7 @@
 <?php
 
 // 3rd party scripts
+include dirname(__FILE__) . '/../3rdparty/firephp/FirePHP.class.php';
 
 // Core classes
 spl_autoload_register(function($class) {
