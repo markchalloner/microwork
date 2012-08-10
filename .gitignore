@@ -1,2 +1,3 @@
-3rdparty
+files/*
+tmp/*
 .DS*
