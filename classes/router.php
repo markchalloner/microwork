@@ -18,12 +18,18 @@ class Router {
     }
 
     public function load($path) {
+
         $path = is_file($this->controllers . '/' . $path . '.php') ? $path : '404';
+
         $controller = $this->controllers . '/' . $path . '.php';
         require_once $controller;
         $class = 'Controller' . ucfirst($path);
-        $controller = new $class($path, $this, $this->configuration);
-        return $controller;
+        if (class_exists($class)) {
+            $controller = new $class($path, $this, $this->configuration);
+            return $controller;
+        } else {
+            throw new Exception('No Controller with class ' . $controller . 'found.');
+        }
     }
 
 }
