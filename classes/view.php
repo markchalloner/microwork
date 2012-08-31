@@ -69,7 +69,6 @@ class View {
         array_pop($this->stack);
         $len = count($this->stack);
         $content = ob_get_clean();
-
         if (isset($this->parents[$tag])) {
             $parent = $this->parents[$tag];
         } else {

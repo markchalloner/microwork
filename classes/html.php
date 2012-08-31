@@ -5,17 +5,12 @@ class HTML {
     private $viewcounter = 0;
     private $tags = array();
     private $uses = array();
-    private $root = null;
+    private $root = NULL;
     private $contents = array();
 
-    public function __construct() {
-        $this->logger = FirePHP::getInstance(true);
-    }
-
     public function setTag($view, $name, $value, $parent = NULL) {
-
-          // Add the tag if it does not already exist or the value is non-empty
-          if (!isset($this->tags[$name]) || strlen(trim($value))) {
+        // Add the tag if it does not already exist or the value is non-empty
+        if (!isset($this->tags[$name]) || strlen(trim($value))) {
             if (isset($this->tags[$name])) {
                 $tag = $this->tags[$name];
             } else {
@@ -56,17 +51,26 @@ class HTML {
             $tag = $this->root;
         }
         $name = $tag->getName();
-        if (isset($this->uses[$name])) {
-            $tag_uses = $this->uses[$name];
-            $values_uses = $tag_uses->getValues();
-        }
-        $values = isset($tag_uses) && strlen(trim(implode('', $values_uses))) ? $values_uses : $tag->getValues();
+        $values = $tag->getValues();
         $children = $tag->getChildren();
+        if ($tag == $this->root || empty($this->uses[$name])) {
+            $values = $tag->getValues();
+            $children = $tag->getChildren();
+        } else {
+            $tag = $this->uses[$name];
+            $values = strlen(trim(implode('', $tag->getValues()))) ? $tag->getValues() : $values;
+            $children = $this->mergeUses($children, $tag->getChildren());
+        }
         for ($i = 0, $l = count($values); $i < $l; $i++) {
             $this->contents[] = $values[$i];
+            // Build the child after this content
             if (isset($children[$i])) {
                 $this->build($children[$i], $c+1);
             }
+        }
+        // Build any leftover children
+        for ($l = count($children); $i < $l; $i++) {
+            $this->build($children[$i], $c+1);
         }
     }
 
@@ -79,13 +83,13 @@ class HTML {
     public function setUseTag($view, $name, $value, $parent = NULL) {
         if (isset($this->uses[$name])) {
             $tag = $this->uses[$name];
+            $tag = $this->uses[$name];
         } else {
             $tag = new Tag($name, $view);
             $this->uses[$name] = $tag;
         }
         if (isset($parent) && isset($this->uses[$parent])) {
-            $parent = $this->uses[$parent];
-            $parent->addChild($tag);
+            $this->uses[$parent]->addChild($tag);
         }
         $tag->addValue($value);
     }
@@ -95,6 +99,17 @@ class HTML {
             $this->viewindexes[$view] = $this->viewcounter++;
         }
         return $this->viewindexes[$view];
+    }
+
+    private function mergeUses($tags, $uses) {
+        $return = array();
+        foreach ($uses as $use) {
+            $return[$use->getName()] = $use;
+        }
+        foreach ($tags as $tag) {
+            $return[$tag->getName()] = $tag;
+        }
+        return array_values($return);
     }
 
 }
