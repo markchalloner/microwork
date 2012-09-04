@@ -2,11 +2,13 @@
 
 class Router {
 
+    private $classes = NULL;
     private $controllers = NULL;
     private $configuration = NULL;
 
     public function __construct() {
-        $this->controllers = dirname('__FILE__') . '/../controllers';
+        $this->classes = dirname(__FILE__);
+        $this->controllers = dirname(__FILE__) . '/../controllers';
         $this->configuration = new Configuration();
     }
 
@@ -18,14 +20,40 @@ class Router {
     }
 
     public function load($path) {
-
-        $path = is_file($this->controllers . '/' . $path . '.php') ? $path : '404';
-
-        $controller = $this->controllers . '/' . $path . '.php';
+        $controller = NULL;
+        $file = NULL;
+        $routes = $this->configuration->get('routes', array());
+        $args = array();
+        foreach ($routes as $route => $data) {
+            if (preg_match('/' . $route . '/', $path)) {
+                foreach ($data['args'] as $route => $value) {
+                    if (preg_match('/' . $route . '/', $path)) {
+                        $args = $value;
+                        break;
+                    }
+                }
+                $file = $data['file'];
+                $class = $data['class'];
+                break;
+            }
+        }
+        if (isset($file) && is_file($this->controllers . '/' . $file . '.php')) {
+            $controller = $this->controllers . '/' . $file . '.php';
+        } elseif (is_file($this->controllers . '/' . $path . '.php')) {
+                $controller = $this->controllers . '/' . $path . '.php';
+                $class = 'Controller' . ucfirst($path);
+        } else {
+                $controller = $this->classes . '/controller.php';
+                $class = 'Controller';
+        }
         require_once $controller;
-        $class = 'Controller' . ucfirst($path);
         if (class_exists($class)) {
-            $controller = new $class($path, $this, $this->configuration);
+            $reflection = new ReflectionClass($class);
+            $controller = $reflection->newInstanceArgs(array_merge(array(
+                $path,
+                $this,
+                $this->configuration,
+            ), $args));
             return $controller;
         } else {
             throw new Exception('No Controller with class ' . $controller . 'found.');

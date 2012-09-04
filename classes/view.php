@@ -8,7 +8,7 @@ class View {
     private $parents = array();
 
     public function __construct($path, $vars = array(), $html = null, $parents = array(), $index = 0) {
-        $this->logger = FirePHP::getInstance(true);
+        $this->path = $path;
         $this->vars = $vars;
         if (isset($html)) {
             $this->html = $html;
@@ -18,19 +18,10 @@ class View {
         $this->parents = $parents;
         $this->index = $index;
         $this->child = $index;
-        $views = dirname(__FILE__) . '/../views';
-        $view = $views . '/' . strtolower($path) . '.php';
-        $view_default = $views . '/html.php';
         ob_start();
         $this->start('html');
-        $this->add(is_file($view) ? $view : $view_default);
+        $this->add(dirname(__FILE__) . '/../views/' . strtolower($this->path) . '.php');
         $this->end('html');
-    }
-
-    public function add($view) {
-        extract($this->vars, EXTR_SKIP);
-        include $view;
-
     }
 
     public function run() {
@@ -39,10 +30,15 @@ class View {
         $this->html->output();
     }
 
+    public function add($view) {
+        extract($this->vars, EXTR_SKIP);
+        include $view;
+    }
+
     public function start($tag) {
         // Close off previous tag
         $len = count($this->stack);
-        $content = ob_get_clean();
+        $content = $this->stripNewLine(ob_get_clean());
         if ($len > 0) {
             $prev = $this->stack[$len - 1];
             if (isset($this->parents[$prev])) {
@@ -68,7 +64,7 @@ class View {
         }
         array_pop($this->stack);
         $len = count($this->stack);
-        $content = ob_get_clean();
+        $content = $this->stripNewLine(ob_get_clean());
         if (isset($this->parents[$tag])) {
             $parent = $this->parents[$tag];
         } else {
@@ -113,6 +109,10 @@ class View {
 
     protected function save($tag, $html, $parent = NULL) {
         $this->html->setTag($this, $tag, $html, $parent);
+    }
+
+    private function stripNewLine($content) {
+        return preg_replace('/(\r|\n|\r\n)$/m', '', $content);
     }
 
 }
