@@ -25,10 +25,11 @@ class Router {
         $routes = $this->configuration->get('routes', array());
         $args = array();
         foreach ($routes as $route => $data) {
-            if (preg_match('/' . $route . '/', $path)) {
+            if (preg_match('/^' . $route . '$/', $path, $matches)) {
                 foreach ($data['args'] as $route => $value) {
-                    if (preg_match('/' . $route . '/', $path)) {
+                    if (preg_match('/^' . $route . '$/', $path)) {
                         $args = $value;
+                        $args[] = $matches;
                         break;
                     }
                 }
